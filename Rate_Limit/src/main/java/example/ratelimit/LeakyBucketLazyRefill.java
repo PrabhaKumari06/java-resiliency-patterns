@@ -1,33 +1,33 @@
 package example.ratelimit;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 public class LeakyBucketLazyRefill {
-    private final long bucketCapacity;
-    private final long leakRate;
-    private final AtomicLong availableRequestInBucket = new AtomicLong(0);
+    private final int bucketSize;
+    private int leakRate;
+    private long lastTimeLeak;
+    private int availableRequestInBucket;
 
-    public LeakyBucketLazyRefill(long bucketCapacity, long leakRate) {
-        this.bucketCapacity = bucketCapacity;
-        this.leakRate = leakRate;
+    public LeakyBucketLazyRefill(int bucketSize) {
+        this.bucketSize = bucketSize;
+        availableRequestInBucket = 0;
+        leakRate = 50; // per mint leak 50 request
+        lastTimeLeak = System.currentTimeMillis();
     }
 
-    public boolean isAllowed(long request) {
-        if (bucketCapacity > availableRequestInBucket.get()) {
-            // serve the request
-            availableRequestInBucket.addAndGet(request);
-            System.out.println("request processed ....");
-            return true;
+    public boolean isRequestAllowed(int request) {
+        leak();
+        availableRequestInBucket += request;
+        if (availableRequestInBucket > bucketSize) {
+            System.out.println("can't process request now ");
+            return false;
         }
-        // stop request
-        System.out.println("can't process the request at this point of time...");
-        return false;
+        return true;
     }
 
     public void leak() {
-        if (availableRequestInBucket.get() < leakRate)
-            availableRequestInBucket.set(0);
-        else
-            availableRequestInBucket.addAndGet(-leakRate);
+        long curTime = System.currentTimeMillis();
+        if (curTime - lastTimeLeak > 60_000) {
+            availableRequestInBucket = Math.max(0, availableRequestInBucket - leakRate);
+            lastTimeLeak = curTime;
+        }
     }
 }
