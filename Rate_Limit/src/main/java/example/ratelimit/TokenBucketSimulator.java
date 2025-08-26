@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 public class TokenBucketSimulator {
     public static void main(String[] args) {
 
-        TokenBucket tokenBucket = new TokenBucket(50);
+        TokenBucketActiveRefill tokenBucket = new TokenBucketActiveRefill(50);
         ExecutorService requests = Executors.newFixedThreadPool(2);
         requests.submit(() -> {
             while (true) {
-                tokenBucket.isAllowed(1);
+                tokenBucket.isRequestAllowed(1);
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -23,7 +23,7 @@ public class TokenBucketSimulator {
 
         ScheduledExecutorService fillToken = Executors.newScheduledThreadPool(1);
         fillToken.scheduleAtFixedRate(() -> {
-            tokenBucket.reFill(30);
+            tokenBucket.refill(30);
             System.out.println("refilled ..");
         }, 0, 5, TimeUnit.SECONDS);
 

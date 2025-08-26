@@ -2,15 +2,15 @@ package example.ratelimit;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class TokenBucket {
+public class TokenBucketActiveRefill {
     private final long bucketCapacity;
     private final AtomicLong availableTokes = new AtomicLong(100);
 
-    public TokenBucket(long bucketCapacity) {
+    public TokenBucketActiveRefill(long bucketCapacity) {
         this.bucketCapacity = bucketCapacity;
     }
 
-    public boolean isAllowed(long request) {
+    public boolean isRequestAllowed(long request) {
         if (availableTokes.get() < request) {
             System.out.println("Too many request, can't process at this point of time ...");
             return false;
@@ -21,7 +21,7 @@ public class TokenBucket {
 
     }
 
-    public void reFill(long tokensToAdd) {
+    public void refill(long tokensToAdd) {
         long newValue = availableTokes.addAndGet(tokensToAdd);
         if (newValue > bucketCapacity)
             availableTokes.set(bucketCapacity);
